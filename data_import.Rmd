@@ -1,0 +1,75 @@
+---
+title: "Data Import"
+author: "Diana Ballesteros"
+date: "9/18/2018" 
+output: html_document
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+
+##Import FAS csv filed
+
+Import my first csv ('FAS_litters.csv)
+```{r}
+litters_data = read_csv(file = "./data/FAS_litters.csv")
+litters_data = janitor::clean_names(litters_data)
+
+```
+
+
+```{r}
+pups_data = read_csv(file = "./data/FAS_pups.csv")
+```
+
+```{r}
+litters_data
+tail(litters_data, 5)
+skimr::skim(litters_data)
+```
+
+Skip some rows; omit variable names
+```{r}
+litters_data = read_csv(file = "./data/FAS_litters.csv",
+  skip = 10, col_names = FALSE)
+```
+
+```{r}
+litters_data = read_csv(file = "./data/FAS_litters.csv",
+  col_types = cols(
+    Group = col_character(),
+    `Litter Number` = col_character(),
+    `GD0 weight` = col_double(),
+    `GD12 weight` = col_double(),
+    `GD of Birth` = col_integer(),
+    `Pups born alive` = col_integer(),
+    `Pups dead @ birth` = col_integer(),
+    `Pups survive` = col_integer()
+  )
+)
+
+litters_data = read_csv(file = "./data/FAS_litters.csv",
+  col_types = "ccddiiii"
+)
+litters_data
+```
+
+
+```{r}
+pups_data = read_csv("./data/FAS_pups.csv", col_types = "ciiiii")
+skimr::skim(pups_data)
+```
+
+##Other Formats 
+```{r}
+library(readxl)
+mlb11_data = read_excel("data/mlb11.xlsx", n_max = 20)
+head(mlb11_data, 5)
+```
+
+

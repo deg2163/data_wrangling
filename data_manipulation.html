@@ -803,6 +803,115 @@ head(arrange(litters_data, group, pups_born_alive), 10)</code></pre>
 <div id="piping" class="section level2">
 <h2>Piping</h2>
 </div>
+<div id="look-at-intermediate-object-approach" class="section level2">
+<h2>Look at intermediate object approach</h2>
+<pre class="r"><code>## creates a whole bunch of data sets in your environment, which can be a little messy 
+litters_data_raw = read_csv(&quot;./data/FAS_litters.csv&quot;,
+  col_types = &quot;ccddiiii&quot;)
+litters_data_clean_names = janitor::clean_names(litters_data_raw)
+litters_data_selected_cols = select(litters_data_clean_names, -pups_survive)
+litters_data_with_vars = mutate(litters_data_selected_cols, 
+  wt_gain = gd18_weight - gd0_weight,
+  group = tolower(group))
+litters_data_with_vars</code></pre>
+<pre><code>## # A tibble: 49 x 8
+##    group litter_number gd0_weight gd18_weight gd_of_birth pups_born_alive
+##    &lt;chr&gt; &lt;chr&gt;              &lt;dbl&gt;       &lt;dbl&gt;       &lt;int&gt;           &lt;int&gt;
+##  1 con7  #85                 19.7        34.7          20               3
+##  2 con7  #1/2/95/2           27          42            19               8
+##  3 con7  #5/5/3/83/3-3       26          41.4          19               6
+##  4 con7  #5/4/2/95/2         28.5        44.1          19               5
+##  5 con7  #4/2/95/3-3         NA          NA            20               6
+##  6 con7  #2/2/95/3-2         NA          NA            20               6
+##  7 con7  #1/5/3/83/3-…       NA          NA            20               9
+##  8 con8  #3/83/3-3           NA          NA            20               9
+##  9 con8  #2/95/3             NA          NA            20               8
+## 10 con8  #3/5/2/2/95         28.5        NA            20               8
+## # ... with 39 more rows, and 2 more variables: pups_dead_birth &lt;int&gt;,
+## #   wt_gain &lt;dbl&gt;</code></pre>
+<pre class="r"><code>##use nested funstion calls: it is being saved as litter_data_clean, gives you exactly the same as the one above. Neither is very easy to read though... 
+litters_data_clean = 
+  mutate(
+    select(
+      janitor::clean_names(
+        read_csv(&quot;./data/FAS_litters.csv&quot;, col_types = &quot;ccddiiii&quot;)
+        ), 
+    -pups_survive
+    ),
+  wt_gain = gd18_weight - gd0_weight,
+  group = tolower(group)
+  )</code></pre>
+<p>Use piping</p>
+<pre class="r"><code>## much easier to read and you can add as much as you want to it
+litters_data = 
+  read_csv(&quot;./data/FAS_litters.csv&quot;, col_types = &quot;ccddiiii&quot;) %&gt;%
+  janitor::clean_names() %&gt;%
+  select(-pups_survive) %&gt;%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = tolower(group)
+    ) %&gt;% 
+    filter(!is.na(gd0_weight))  </code></pre>
+<p>Illustrate placeholder use with “lm” The dot is just a placeholder for the code prior</p>
+<pre class="r"><code>## ?lm to help you with questions regarding a linear model 
+## allows you fit in your linear mode (I'm still a little confused about this)
+litters_data = 
+  read_csv(&quot;./data/FAS_litters.csv&quot;, col_types = &quot;ccddiiii&quot;) %&gt;%
+  janitor::clean_names() %&gt;%
+  select(-pups_survive) %&gt;%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = tolower(group)
+    ) %&gt;% 
+    filter(!is.na(gd0_weight)) %&gt;%   
+    lm(gd18_weight ~ gd0_weight, data = .)
+    
+
+## Another way to do the above
+
+clean_data = 
+  read_csv(&quot;./data/FAS_litters.csv&quot;, col_types = &quot;ccddiiii&quot;) %&gt;%
+  janitor::clean_names() %&gt;%  
+  select(., -pups_survive) %&gt;%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = tolower(group)
+    ) %&gt;% 
+    filter(!is.na(gd0_weight)) %&gt;%   
+    lm(gd18_weight ~ gd0_weight, data = .)
+## Another way to do the above if you are not starting off with a dataframe: 
+litters_data = 
+  read_csv(&quot;./data/FAS_litters.csv&quot;, col_types = &quot;ccddiiii&quot;) %&gt;%
+  janitor::clean_names(dat = .) %&gt;%
+  select(.data = ., -pups_survive) %&gt;%
+  mutate(.data = .,
+    wt_gain = gd18_weight - gd0_weight,
+    group = tolower(group)) %&gt;% 
+  filter(.data = ., !is.na(gd0_weight)) %&gt;% 
+  lm(gd18_weight ~ gd0_weight, data = .)</code></pre>
+</div>
+<div id="learning-assessment-2" class="section level2">
+<h2>Learning Assessment</h2>
+<pre class="r"><code>  read_csv(&quot;./data/FAS_pups.csv&quot;, col_types = &quot;ciiiii&quot;) %&gt;%
+  janitor::clean_names(.) %&gt;%
+  filter(sex == 1) %&gt;% 
+  select(-pd_ears) %&gt;% 
+  mutate(pd_pivot_gt7 = pd_pivot &gt; 7)</code></pre>
+<pre><code>## # A tibble: 155 x 6
+##    litter_number   sex pd_eyes pd_pivot pd_walk pd_pivot_gt7
+##    &lt;chr&gt;         &lt;int&gt;   &lt;int&gt;    &lt;int&gt;   &lt;int&gt; &lt;lgl&gt;       
+##  1 #85               1      13        7      11 FALSE       
+##  2 #85               1      13        7      12 FALSE       
+##  3 #1/2/95/2         1      13        7       9 FALSE       
+##  4 #1/2/95/2         1      13        8      10 TRUE        
+##  5 #5/5/3/83/3-3     1      13        8      10 TRUE        
+##  6 #5/5/3/83/3-3     1      14        6       9 FALSE       
+##  7 #5/4/2/95/2       1      14        5       9 FALSE       
+##  8 #4/2/95/3-3       1      13        6       8 FALSE       
+##  9 #4/2/95/3-3       1      13        7       9 FALSE       
+## 10 #2/2/95/3-2       1      NA        8      10 TRUE        
+## # ... with 145 more rows</code></pre>
+</div>
 </div>
 
 

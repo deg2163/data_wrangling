@@ -188,3 +188,103 @@ tail(arrange(litters_data, group, pups_born_alive), 10)
 
 ##Piping 
 
+##Look at intermediate object approach 
+
+```{r}
+
+## creates a whole bunch of data sets in your environment, which can be a little messy 
+litters_data_raw = read_csv("./data/FAS_litters.csv",
+  col_types = "ccddiiii")
+litters_data_clean_names = janitor::clean_names(litters_data_raw)
+litters_data_selected_cols = select(litters_data_clean_names, -pups_survive)
+litters_data_with_vars = mutate(litters_data_selected_cols, 
+  wt_gain = gd18_weight - gd0_weight,
+  group = tolower(group))
+litters_data_with_vars
+
+```
+
+
+```{r}
+
+##use nested funstion calls: it is being saved as litter_data_clean, gives you exactly the same as the one above. Neither is very easy to read though... 
+litters_data_clean = 
+  mutate(
+    select(
+      janitor::clean_names(
+        read_csv("./data/FAS_litters.csv", col_types = "ccddiiii")
+        ), 
+    -pups_survive
+    ),
+  wt_gain = gd18_weight - gd0_weight,
+  group = tolower(group)
+  )
+```
+
+Use piping 
+```{r}
+## much easier to read and you can add as much as you want to it
+litters_data = 
+  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  janitor::clean_names() %>%
+  select(-pups_survive) %>%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = tolower(group)
+    ) %>% 
+    filter(!is.na(gd0_weight))  
+```
+
+Illustrate placeholder use with "lm"
+The dot is just a placeholder for the code prior 
+```{r}
+## ?lm to help you with questions regarding a linear model 
+## allows you fit in your linear mode (I'm still a little confused about this)
+litters_data = 
+  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  janitor::clean_names() %>%
+  select(-pups_survive) %>%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = tolower(group)
+    ) %>% 
+    filter(!is.na(gd0_weight)) %>%   
+    lm(gd18_weight ~ gd0_weight, data = .)
+    
+
+## Another way to do the above
+
+clean_data = 
+  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  janitor::clean_names() %>%  
+  select(., -pups_survive) %>%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = tolower(group)
+    ) %>% 
+    filter(!is.na(gd0_weight)) %>%   
+    lm(gd18_weight ~ gd0_weight, data = .)
+## Another way to do the above if you are not starting off with a dataframe: 
+litters_data = 
+  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  janitor::clean_names(dat = .) %>%
+  select(.data = ., -pups_survive) %>%
+  mutate(.data = .,
+    wt_gain = gd18_weight - gd0_weight,
+    group = tolower(group)) %>% 
+  filter(.data = ., !is.na(gd0_weight)) %>% 
+  lm(gd18_weight ~ gd0_weight, data = .)
+```
+
+##Learning Assessment 
+
+
+```{r}
+  read_csv("./data/FAS_pups.csv", col_types = "ciiiii") %>%
+  janitor::clean_names(.) %>%
+  filter(sex == 1) %>% 
+  select(-pd_ears) %>% 
+  mutate(pd_pivot_gt7 = pd_pivot > 7)
+```
+
+

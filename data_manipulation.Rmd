@@ -5,17 +5,15 @@ date: "9/20/2018"
 output: html_document
 ---
 
-
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
 library(tidyverse)
 ```
 
 
-##
+## Import my csv files as examples 
 ```{r}
-
+## loading the relative path 
 litters_data = read_csv("./data/FAS_litters.csv",
   col_types = "ccddiiii")
 litters_data = janitor::clean_names(litters_data)
@@ -27,38 +25,57 @@ pups_data = janitor::clean_names(pups_data)
 
 ```
 
-##Select Variables 
-
+##Select Variables
+...by listing
 ```{r}
+##?select allows you to check what select does
+## select(data frame, which group you want to select separated by commas)
 select(litters_data, group, litter_number, gd0_weight, pups_survive)
+
+##selecting a different selection of variables where you extract the variables I am interested in
+select(litters_data, litter_number, gd0_weight, pups_survive)
 ```
 
-....by specifying a range: 
+...by specifying a range: 
 ```{r}
-select(litters_data, gd_df_birth:pups_survive)
-select(litters_data, group, litter_number, gd0_weight, pups_survive)
+
+##allows you to select a range 
+select(litters_data, gd_of_birth:pups_survive)
+
+##allows you to select a range and another list 
+select(litters_data, group, gd_of_birth:pups_survive)
 ```
 
 
 ...by saying you want to remove (this will allow you to remove a column you don't want): 
 ```{r}
+##allows you to keep everything else, except litter_number
 select(litters_data, -litter_number)
 ```
 
 ...Selecting gd_day_0_weight and also renaming it as well. You can do either. 
 ```{r}
+##here you are selecting gd0_weight and also renaming it 
 select(litters_data, group, litter_number, gd_day_0_weight = gd0_weight)
+
+##same way to rename a variable without selecting it at the same time 
 rename(litters_data,  gd_day_0_weight = gd0_weight)
 ```
 
 ....use select helpers
-
 ```{r}
-?select_helpers
+##?select_helpers allows you get help on how to do selec things
 
+## allows you to select variables that start with "gd"
 select(litters_data, starts_with("gd"))
-select(litters_data, litter_numer, starts_with("pup"))
 
+##allows you to select variables that start with "gd" and hte litter number 
+select(litters_data, litter_number, starts_with("gd"))
+
+## allows you to select variables that start with "pup"
+select(litters_data, starts_with("pup"))
+
+##helps your reorganize your dataset. In this case, you are pulling the litter_data, then telling it to bring in the litter_number as the first column, then bringing in everything else. 
 select(litters_data, litter_number, everything())
 ```
 
@@ -67,33 +84,53 @@ select(litters_data, litter_number, everything())
 select(pups_data, litter_number:pd_ears)
 ```
 
-##Filter observations
+##Filter observations - eliminate some rows from my dataset 
 
-...gd_of_birth is exactly equal to 20 
+## gd_of_birth is exactly equal to 20 
+# gd_of_birth == 20
+
+##greater than or equal to 2 
+# pups_born_alive >= 2
+
+##should be equal to each other; not equal to 4  
+# pups_survive != 4
+# !(pups_survive == 4)
+
+##look at only the ones that are in group 7 or 8 
+# group %in% c("Con7", "Con8")
+
+##similar to the one above
+# group == "Con7" & gd_of_birth == 20
+
+##are these thing NA or are these things not NA
+# !is.na(wt_increase)
+
 ```{r}
-gd_of_birth == 20 
-```
-
-pups_born_alive >= 2
-pups_survive != 4
-!(pups_survive == 4)
-group %in% c("Con7", "Con8")
-group == "Con7" & gd_of_birth == 20
-!is.na(wt_increase)
-
-```{r}
-select(litters_data, group, litter_number, gd_day_0_weight = gd0_weight)
-
+## gives you values less than 25 within the gd0_weight column 
 filter(litters_data, gd0_weight < 25)
 filter(litters_data, gd0_weight >= 25) 
 
+## exactly equal to 8 
 filter(litters_data, pups_born_alive == 8) 
+
+## what it is saying: is it true that gd0_weight is missing? 
+filter(litters_data, is.na(gd0_weight)) 
+
+## by putting the exclamation point, you will exclude those that are NA
 filter(litters_data, !is.na(gd0_weight)) 
 
+## | means OR. This will give you Low8 OR Low 7 
 filter(litters_data, group == "Low8" | group == "Low7")
-filter(litters_data, group %in% c("Low8","Low7")) 
-filter(litters_data, pups_data)
 
+## does the exact same thing as above 
+filter(litters_data, group %in% c("Low8","Low7")) 
+
+## will give you all the rows that have 4,5, or 6 within pups_born_alive 
+filter(litters_data, pups_born_alive %in% 4:6)
+
+## you can also combine different things; either will do the same thing, but comma is easier to read 
+filter(litters_data, pups_born_alive %in% 4:7, !is.na(gd0_weight))
+filter(litters_data, pups_born_alive %in% 4:7 & !is.na(gd0_weight))
 ```
 
 ##Learning Assessment 
@@ -104,90 +141,50 @@ filter(pups_data, pd_walk < 11, sex == 2)
 ```
 
 
-##Mutate: you can multiple things at once, tolower allows you to do lower case you aren't necessary changing the table (only in the console) 
+##Mutate: you can do multiple operations at the same time
+Create variable 
 ```{r}
+
+## 1) creating a new variable based on the functions of other variable and add in the weight gain variable. 2) tolower allows you to do lower case of whatever is inside. You aren't necessary changing the table (only in the console); put them in separate lines so that it looks cleaner; new variables getting added in at the end of the dataset 
 mutate(litters_data,
   wt_gain = gd18_weight - gd0_weight,
   group = tolower(group)
 )
 
+## you are starting with the same info as above, but are now adding a new variable that is squaring it 
 mutate(litters_data,
   wt_gain = gd18_weight - gd0_weight,
   wt_gain_squared = wt_gain^2
 )
 ```
 
-
-##Arrange 
-
-Arange the data...
-Desc makes it in descending order
+## Learning Assessment 
 ```{r}
+##Create a variable that subtracts 7 from PD pivot
+mutate(pups_data, pd_pivot_minus7 = pd_pivot - 7)
 
+##Create a variable that is the sum of all the PD variables
+mutate(pups_data, pd_sum_2 = pd_ears + pd_eyes + pd_pivot + pd_walk)
+```
+
+##Arrange: you are just putting your data in a diff order 
+...Arange the data
+```{r}
+## ?arrange if you have any questions 
+
+##arranges the gd0_weight from the smallest to the largest 
 arrange(litters_data, gd0_weight)
 
-arrange(litters_data, gd0_weight, pups_born_alive)
+##arranges by multiple things, first by pups_born_alive, then by gd0_weight
+arrange(litters_data, pups_born_alive, gd0_weight)
+
+### desc makes it in descending order
 arrange(litters_data, desc(gd0_weight), pups_born_alive)
 
+##what does this mean? I think it gives you the first 10 at the top of the list 
 head(arrange(litters_data, group, pups_born_alive), 10)
+tail(arrange(litters_data, group, pups_born_alive), 10)
 ```
 
 ##Piping 
-
-Look at intermediate
-
-```{r}
-litters_data_raw = read_csv("./data/FAS_litters.csv",
-  col_types = "ccddiiii")
-litters_data_clean_names = janitor::clean_names(litters_data_raw)
-litters_data_selected_cols = select(litters_data_clean_names, -pups_survive)
-litters_data_with_vars = mutate(litters_data_selected_cols, 
-  wt_gain = gd18_weight - gd0_weight,
-  group = tolower(group))
-litters_data_with_vars
-
-```
-
-use nested funstion calls: it is being saved as litter_data_clean 
-```{r}
-litters_data_clean = 
-  mutate(
-    select(
-      janitor::clean_names(
-        read_csv("./data/FAS_litters.csv", col_types = "ccddiiii")
-        ), 
-    -pups_survive
-    ),
-  wt_gain = gd18_weight - gd0_weight,
-  group = tolower(group)
-  )
-litters_data_clean
-```
-
-Use piping 
-```{r}
-litters_data = 
-  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
-  janitor::clean_names(dat = .) %>%
-  select(.data = ., -pups_survive) %>%
-  mutate(.data = .,
-    wt_gain = gd18_weight - gd0_weight,
-    group = tolower(group)) %>% 
-  filter(!is.na(gd0_weight)) %>% 
-  filter(.data = ., !is.na(gd_weight))
-```
-
-Illustrate placeholder use with "lm"
-The dot is just a placeholder for the code prior 
-```{r}
-  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
-  janitor::clean_names(dat = .) %>%
-  select(.data = ., -pups_survive) %>%
-  mutate(.data = .,
-    wt_gain = gd18_weight - gd0_weight,
-    group = tolower(group)) %>% 
-  filter(!is.na(gd0_weight)) %>% 
-  lm(gd18_weight ~ gd0_weight, data = .)
-```
-
 

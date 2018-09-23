@@ -18,20 +18,35 @@ library(tidyverse)
 Import my first csv ('FAS_litters.csv)
 ```{r}
 litters_data = read_csv(file = "./data/FAS_litters.csv")
+
+## Convert to lower snake case 
 litters_data = janitor::clean_names(litters_data)
-
 ```
 
-
 ```{r}
+
+##Learning Assessment
 pups_data = read_csv(file = "./data/FAS_pups.csv")
+
+## Convert to lower snake case 
+pups_data = janitor::clean_names(pups_data)
 ```
 
 ```{r}
+##Allows you to view the data 
 litters_data
+
+##allows you to see the top 10 rows of the data 
+head(litters_data)
+
+##allows you to see the bottom rows of the data, often good to check the first and last rows to make sure you don't have empty rows 
 tail(litters_data, 5)
+
+##allows you to take a look at the data briefly skmir is another package
 skimr::skim(litters_data)
 ```
+
+You can use View(litters_data), but it won't allow you to knit it. It is just useful to use when you want to take a look at the entire dataset. 
 
 Skip some rows; omit variable names
 ```{r}
@@ -40,6 +55,7 @@ litters_data = read_csv(file = "./data/FAS_litters.csv",
 ```
 
 ```{r}
+##allows you to tell the data set what data types each column is 
 litters_data = read_csv(file = "./data/FAS_litters.csv",
   col_types = cols(
     Group = col_character(),
@@ -53,23 +69,79 @@ litters_data = read_csv(file = "./data/FAS_litters.csv",
   )
 )
 
+##allows you to tell the data set what data tupe each is (short-hand)
 litters_data = read_csv(file = "./data/FAS_litters.csv",
   col_types = "ccddiiii"
 )
-litters_data
+
 ```
 
 
 ```{r}
+##Learning Assessment 
+
+pups_data
+
 pups_data = read_csv("./data/FAS_pups.csv", col_types = "ciiiii")
+pups_data = janitor::clean_names(pups_data)
 skimr::skim(pups_data)
 ```
 
 ##Other Formats 
+
+Read in mlb data 
 ```{r}
 library(readxl)
-mlb11_data = read_excel("data/mlb11.xlsx", n_max = 20)
-head(mlb11_data, 5)
+
+## you can either load the library or do it this way
+mlb_data = read_excel (path = "./data/mlb11.xlsx", n_max = 20)
+head(mlb_data, 5)
+
+##if you want to take a subset 
+mlb_subset = read_excel(path = "./data/mlb11.xlsx", 
+                        range = "A1:E17")
+
 ```
 
 
+```{r}
+
+## Another way to do what I did: 
+  
+#### you can either load the library or do it this way
+mlb_data = readxl::read_excel(path = "./data/mlb11.xlsx")
+
+##if you want to take a subset 
+mlb_subset = readxl::read_excel(path = "./data/mlb11.xlsx", range = "A1:E17")
+```
+
+## Read in Pulse Data Set 
+```{r}
+
+##helpful when you get data from sas/spss/stats 
+library(haven)
+pulse_data = read_sas("./data/public_pulse_data.sas7bdat")
+
+##another way to do it 
+pulse_data = haven::read_sas("./data/public_pulse_data.sas7bdat")
+```
+
+##Compare ith base R
+```{r}
+
+## preferred 
+pups_readr = read_csv("./data/Fas_pups.csv")
+
+##won't work, so it's a good thing sinc eyou don't want it guessing 
+pups_readr$S
+
+## don't use - shows a long list of ouput
+pups_baser = read.csv("./data/Fas_pups.csv")
+
+##it guesses which column starts with an and assumes it since there is only one 
+pups_baser$S
+```
+
+
+
+ 

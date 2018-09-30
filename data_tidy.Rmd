@@ -1,0 +1,171 @@
+---
+title: "Data Import"
+author: "Diana Ballesteros"
+date: "9/25/2018" 
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Gather
+PULSE Data 
+```{r}
+pulse_data = haven::read_sas("./data/public_pulse_data.sas7bdat") %>%
+  janitor::clean_names()
+pulse_datapulse_data = haven::read_sas("./data/public_pulse_data.sas7bdat") %>%
+  janitor::clean_names()
+pulse_data
+```
+
+This isn't tidy yet...
+
+```{r}
+## in  class 
+pulse_tidy = pulse_data %>% 
+  gather(key = "visit", value = "bdi_score", bdi_score_01m:bdi_score_12m)
+
+## to view the tidy version 
+##pulse_tidy %>% View("tidy")
+  ##gather(key = "visit", value = "bdi_score", bdi_score_01m:bdi_score_12m) %>% View("tidy")
+
+## to view the non-tidy version 
+##pulse_tidy %>% View ("nontidy")
+```
+
+
+```{r}
+
+## this is the same as the one before from the website 
+pulse_tidy_data = gather(pulse_data, key = visit, value = bdi, bdi_score_bl:bdi_score_12m)
+pulse_tidy_data
+```
+
+Illustrate 'separate': 
+```{r}
+
+##?separate can help you pull the help 
+
+pulse_tidy %>% 
+  separate(visit, into = c("bdi_str","score_str","visit"), sep = "_") %>% 
+  select(-bdi_str, -score_str) %>% 
+  mutate(visit = replace(visit, visit == "b1", "00m"))
+```
+
+All together, the data import/cleaning pipeline is
+```{r}
+
+## creating a clean data set with everything from above 
+pulse_df = 
+  haven::read_sas("./data/public_pulse_data.sas7bdat") %>%
+  janitor::clean_names() %>%
+  gather(key = visit, value = bdi, bdi_score_bl:bdi_score_12m) %>%
+  separate(visit, into = c("bdi_str","score_str","visit"), sep = "_") %>% 
+  select(-bdi_str, -score_str) %>% 
+  mutate(visit = replace(visit, visit == "b1", "00m"))
+```
+
+
+## Revisit FAS_litters 
+```{r}
+
+## in-class showing how to separate 2 variables in 1 column 
+litter_data = 
+  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>% 
+  janitor::clean_names() %>%
+  separate(group, into = c("dose", "day"), 3) %>%
+  mutate(dose = tolower(dose),
+         wt_gain = gd18_weight - gd0_weight) %>%
+  arrange(litter_number)
+
+## website 
+litter_data = 
+  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>% 
+  janitor::clean_names() %>%
+  separate(group, into = c("dose", "day_of_tx"), sep = 3) %>%
+  mutate(dose = tolower(dose),
+         wt_gain = gd18_weight - gd0_weight) %>%
+  arrange(litter_number)
+```
+
+## Learning Assessment (Data Cleaning/Tidying)
+```{r}
+litter_data_practice = 
+  read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>% 
+  janitor::clean_names() %>% 
+  select(litter_number, ends_with("weight")) %>% 
+  gather(key = gd, value = weight, gd0_weight:gd18_weight) %>% 
+  mutate(gd = recode(gd, "gd0_weight" = 0, "gd18_weight" = 18))
+```
+
+## Spread 
+Create 'analysis_result'
+```{r}
+analysis_result = tibble(
+  group = c("treatment", "treatment", "placebo", "placebo"),
+  time = c("pre", "post", "pre", "post"),
+  mean = c(4, 8, 3.5, 4)
+)
+
+analysis_result
+```
+
+Make it readable: 
+```{r}
+analysis_result %>% 
+  spread(key = time, value = mean) %>% 
+  knitr::kable()
+
+##knitr:kable() is what makes the table presentable when you knit the data
+```
+
+## Binding Rows 
+
+```{r}
+fellowship_ring = readxl::read_excel("./data/LotR_Words.xlsx", range = "B3:D6") %>%
+  mutate(movie = "fellowship_ring")
+
+two_towers = readxl::read_excel("./data/LotR_Words.xlsx", range = "F3:H6") %>%
+  mutate(movie = "two_towers")
+
+return_king = readxl::read_excel("./data/LotR_Words.xlsx", range = "J3:L6") %>%
+  mutate(movie = "return_king")
+```
+
+Create Final LotR data: 
+```{r}
+
+## in class 
+bind_rows(fellowship_ring, two_towers, return_king) %>% 
+  janitor::clean_names() %>% 
+  gather(key = sex, value = word, female:male) %>% 
+  mutate(race = tolower(race))
+```
+
+## Join Data 
+
+```{r}
+pup_data = read_csv("./data/FAS_pups.csv", col_types = "ciiiii") %>%
+  janitor::clean_names() %>%
+  mutate(sex = recode(sex, `1` = "male", `2` = "female")) 
+
+litter_data = read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
+  janitor::clean_names() %>%
+  select(-pups_survive) %>%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = tolower(group))
+
+```
+
+## Create joined data: 
+```{r}
+
+## left join, you don't have to put by, but it will be helpful
+## pipes work if you are following a sequential thing, recommends that we create a new thing...
+fas_data = left_join(pup_data, litter_data, by = "litter_number")
+fas_data
+```
+

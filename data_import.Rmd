@@ -2,7 +2,7 @@
 title: "Data Import"
 author: "Diana Ballesteros"
 date: "9/18/2018" 
-output: html_document
+output: github_document
 ---
 
 

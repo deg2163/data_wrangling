@@ -121,7 +121,8 @@ analysis_result %>%
 ##knitr:kable() is what makes the table presentable when you knit the data
 ```
 
-## Binding Rows 
+## Bind Rows 
+Read in LotR Data 
 
 ```{r}
 fellowship_ring = readxl::read_excel("./data/LotR_Words.xlsx", range = "B3:D6") %>%
@@ -137,7 +138,7 @@ return_king = readxl::read_excel("./data/LotR_Words.xlsx", range = "J3:L6") %>%
 Create Final LotR data: 
 ```{r}
 
-## in class 
+## in class, which helps you stack the rows on top of each other 
 bind_rows(fellowship_ring, two_towers, return_king) %>% 
   janitor::clean_names() %>% 
   gather(key = sex, value = word, female:male) %>% 
@@ -164,7 +165,7 @@ litter_data = read_csv("./data/FAS_litters.csv", col_types = "ccddiiii") %>%
 ```{r}
 
 ## left join, you don't have to put by, but it will be helpful
-## pipes work if you are following a sequential thing, recommends that we create a new thing...
+## pipes work if you are following a sequential thing, recommends that we create a new thing when you want to join the two data sets
 fas_data = left_join(pup_data, litter_data, by = "litter_number")
 fas_data
 ```
